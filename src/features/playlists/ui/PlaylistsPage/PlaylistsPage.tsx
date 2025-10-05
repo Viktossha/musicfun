@@ -4,7 +4,7 @@ import {
 } from "@/features/playlists/api/playlistsApi.ts";
 import s from "./PlaylistsPage.module.css";
 import { CreatePlaylistForm } from "@/features/playlists/ui/PlaylistsPage/CreatePlaylistForm/CreatePlaylistForm.tsx";
-import { useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import type {
   PlaylistData,
@@ -13,15 +13,22 @@ import type {
 import { PlaylistItem } from "@/features/playlists/ui/PlaylistsPage/PlaylistItem/PlaylistItem.tsx";
 import { EditPlaylistForm } from "@/features/playlists/ui/PlaylistsPage/EditPlaylistForm/EditPlaylistForm.tsx";
 import { useDebounceValue } from "@/common/hooks";
+import { Pagination } from "@/common/components";
 
 export const PlaylistsPage = () => {
   const [playlistId, setPlaylistId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(2);
 
   const { register, handleSubmit, reset } = useForm<UpdatePlaylistArgs>();
 
   const debounceSearch = useDebounceValue(search);
-  const { data, isLoading } = useFetchPlaylistsQuery({ search: debounceSearch });
+  const { data, isLoading } = useFetchPlaylistsQuery({
+    search: debounceSearch,
+    pageSize,
+    pageNumber: currentPage,
+  });
 
   const [deletePlaylist] = useDeletePlaylistMutation();
 
@@ -44,6 +51,16 @@ export const PlaylistsPage = () => {
     }
   };
 
+  const changePageSizeHandler = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const searchPlaylistHandler = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.currentTarget.value);
+    setCurrentPage(1);
+  };
+
   return (
     <div className={s.container}>
       <h1>Playlists page</h1>
@@ -51,7 +68,7 @@ export const PlaylistsPage = () => {
       <input
         type="search"
         placeholder={"Search playlist by title"}
-        onChange={(e) => setSearch(e.currentTarget.value)}
+        onChange={searchPlaylistHandler}
       />
       <div className={s.items}>
         {!data?.data.length && !isLoading && <h2>Playlists not found</h2>}
@@ -79,6 +96,13 @@ export const PlaylistsPage = () => {
           );
         })}
       </div>
+      <Pagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        setCurrentPage={setCurrentPage}
+        pagesCount={data?.meta.pagesCount || 1}
+        changePageSize={changePageSizeHandler}
+      />
     </div>
   );
 };
