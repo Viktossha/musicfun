@@ -12,6 +12,7 @@ import type {
 } from "@/features/playlists/api/playlistsApi.types.ts";
 import { PlaylistItem } from "@/features/playlists/ui/PlaylistsPage/PlaylistItem/PlaylistItem.tsx";
 import { EditPlaylistForm } from "@/features/playlists/ui/PlaylistsPage/EditPlaylistForm/EditPlaylistForm.tsx";
+import { useDebounceValue } from "@/common/hooks";
 
 export const PlaylistsPage = () => {
   const [playlistId, setPlaylistId] = useState<string | null>(null);
@@ -19,7 +20,8 @@ export const PlaylistsPage = () => {
 
   const { register, handleSubmit, reset } = useForm<UpdatePlaylistArgs>();
 
-  const { data, isLoading } = useFetchPlaylistsQuery({ search });
+  const debounceSearch = useDebounceValue(search);
+  const { data, isLoading } = useFetchPlaylistsQuery({ search: debounceSearch });
 
   const [deletePlaylist] = useDeletePlaylistMutation();
 
